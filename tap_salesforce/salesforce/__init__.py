@@ -225,6 +225,7 @@ class Salesforce:
         is_sandbox=None,
         select_fields_by_default=None,
         default_start_date=None,
+        default_end_date=None,
         api_type=None,
     ):
         self.api_type = api_type.upper() if api_type else None
@@ -253,6 +254,8 @@ class Salesforce:
             if default_start_date
             else (singer_utils.now() - timedelta(weeks=4))
         ).isoformat()
+
+        self.default_end_date = default_end_date
 
         if default_start_date:
             LOGGER.info(
@@ -367,6 +370,13 @@ class Salesforce:
         replication_key = catalog_metadata.get((), {}).get("replication-key")
 
         return singer.get_bookmark(state, catalog_entry["tap_stream_id"], replication_key) or self.default_start_date
+
+    def get_end_date(self):
+        if self.default_end_date is None:
+            return self.default_end_date
+
+        return singer_utils.strftime(singer_utils.strptime_to_utc(self.default_end_date))
+
 
     def _build_query_string(self, catalog_entry, start_date, end_date=None, order_by_clause=True):
         selected_properties = self._get_selected_properties(catalog_entry)

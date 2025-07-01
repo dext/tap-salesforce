@@ -28,12 +28,14 @@ class Bulk2:
 
     def _get_bulk_headers(self):
         return {**self.sf.auth.rest_headers, "Content-Type": "application/json"}
+        print("hello")
 
     def _create_job(self, catalog_entry, state):
         url = self.bulk_url.format(self.sf.instance_url)
         start_date = self.sf.get_start_date(state, catalog_entry)
+        end_date = self.sf.get_end_date()
 
-        query = self.sf._build_query_string(catalog_entry, start_date, order_by_clause=False)
+        query = self.sf._build_query_string(catalog_entry, start_date, end_date=end_date, order_by_clause=False)
 
         body = {
             "operation": "queryAll",

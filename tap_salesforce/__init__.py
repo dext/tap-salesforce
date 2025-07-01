@@ -52,6 +52,7 @@ CONFIG = {
     "client_id": None,
     "client_secret": None,
     "start_date": None,
+    "end_date": None,
 }
 
 FORCED_FULL_TABLE = {
@@ -504,6 +505,7 @@ def main_impl():
             is_sandbox=CONFIG.get("is_sandbox"),
             select_fields_by_default=CONFIG.get("select_fields_by_default"),
             default_start_date=CONFIG.get("start_date"),
+            default_end_date=CONFIG.get("end_date"),
             api_type=CONFIG.get("api_type"),
         )
         sf.login()
