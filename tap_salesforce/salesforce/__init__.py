@@ -387,10 +387,13 @@ class Salesforce:
         replication_key = catalog_metadata.get((), {}).get("replication-key")
 
         if replication_key:
-            where_clause = f" WHERE {replication_key} >= {start_date} "
-            end_date_clause = f" AND {replication_key} < {end_date}" if end_date else ""
+            # where_clause = f" WHERE {replication_key} >= {start_date} "
+            # end_date_clause = f" AND {replication_key} < {end_date}" if end_date else ""
 
-            order_by = f" ORDER BY {replication_key} ASC"
+            where_clause = f" WHERE createddate >= {start_date} "
+            end_date_clause = f" AND createddate < {end_date}" if end_date else ""
+
+            order_by = f" ORDER BY createddate ASC"
             if order_by_clause:
                 return query + where_clause + end_date_clause + order_by
 
