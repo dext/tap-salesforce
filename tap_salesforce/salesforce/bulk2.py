@@ -4,7 +4,7 @@ import sys
 import time
 
 import singer
-from singer import metrics
+from singer import metadata, metrics
 
 BATCH_STATUS_POLLING_SLEEP = 20
 DEFAULT_CHUNK_SIZE = 50000
@@ -28,14 +28,25 @@ class Bulk2:
 
     def _get_bulk_headers(self):
         return {**self.sf.auth.rest_headers, "Content-Type": "application/json"}
-        print("hello")
+
+    def _is_full_refresh(self, catalog_entry, state):
+        catalog_metadata = metadata.to_map(catalog_entry["metadata"])
+        replication_key = catalog_metadata.get((), {}).get("replication-key")
+        replication_method = catalog_metadata.get((), {}).get("replication-method")
+        bookmark = state.get("bookmarks", {}).get(catalog_entry["tap_stream_id"], {}).get(replication_key)
+        is_full_refresh = replication_key is None or replication_method == "FULL_TABLE" or bookmark is None
+
+        return is_full_refresh
 
     def _create_job(self, catalog_entry, state):
         url = self.bulk_url.format(self.sf.instance_url)
         start_date = self.sf.get_start_date(state, catalog_entry)
         end_date = self.sf.get_end_date()
+        is_full_refresh = self._is_full_refresh(catalog_entry, state)
 
-        query = self.sf._build_query_string(catalog_entry, start_date, end_date=end_date, order_by_clause=False)
+        query = self.sf._build_query_string(
+            catalog_entry, start_date, end_date=end_date, order_by_clause=False, is_full_refresh=is_full_refresh
+        )
 
         body = {
             "operation": "queryAll",
