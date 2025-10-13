@@ -148,7 +148,7 @@ def raise_for_status(resp):
         that this error is ephemeral and resolved after retries.
     """
     if resp.status_code != 200:
-        err_msg = f"{resp.status_code} Client Error: {resp.reason} " f"for url: {resp.url}"
+        err_msg = f"{resp.status_code} Client Error: {resp.reason} for url: {resp.url}"
         LOGGER.warning(err_msg)
 
     if resp.status_code == 406 and "CustomNotAcceptable" in resp.reason:
@@ -377,8 +377,9 @@ class Salesforce:
 
         return singer_utils.strftime(singer_utils.strptime_to_utc(self.default_end_date))
 
-
-    def _build_query_string(self, catalog_entry, start_date, end_date=None, order_by_clause=True):
+    def _build_query_string(
+        self, catalog_entry, start_date, end_date=None, order_by_clause=True, is_full_refresh=False
+    ):
         selected_properties = self._get_selected_properties(catalog_entry)
 
         query = "SELECT {} FROM {}".format(",".join(selected_properties), catalog_entry["stream"])
@@ -387,10 +388,15 @@ class Salesforce:
         replication_key = catalog_metadata.get((), {}).get("replication-key")
 
         if replication_key:
-            where_clause = f" WHERE {replication_key} >= {start_date} "
-            end_date_clause = f" AND {replication_key} < {end_date}" if end_date else ""
+            if is_full_refresh:
+                where_clause = f" WHERE CreatedDate >= {start_date} "
+                end_date_clause = f" AND CreatedDate < {end_date}" if end_date else ""
+                order_by = " ORDER BY CreatedDate ASC"
+            else:
+                where_clause = f" WHERE {replication_key} >= {start_date} "
+                end_date_clause = f" AND {replication_key} < {end_date}" if end_date else ""
+                order_by = f" ORDER BY {replication_key} ASC"
 
-            order_by = f" ORDER BY {replication_key} ASC"
             if order_by_clause:
                 return query + where_clause + end_date_clause + order_by
 

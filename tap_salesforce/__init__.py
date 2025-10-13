@@ -9,7 +9,6 @@ from copy import deepcopy
 
 import singer
 import singer.utils as singer_utils
-from singer import metadata, metrics
 
 import tap_salesforce.salesforce
 from tap_salesforce.salesforce import Salesforce
@@ -213,8 +212,8 @@ def do_discover(sf: Salesforce, streams: list[str]):  # noqa: C901
 
             properties[field_name] = property_schema
 
-            if ((field_name=='OldValue') or (field_name=='NewValue')) and ('History' in sobject_name):
-                properties[field_name] = {'type': ['null', 'string']}
+            if ((field_name == "OldValue") or (field_name == "NewValue")) and ("History" in sobject_name):
+                properties[field_name] = {"type": ["null", "string"]}
 
         if replication_key:
             mdata = metadata.write(mdata, ("properties", replication_key), "inclusion", "automatic")
@@ -352,7 +351,7 @@ def is_property_selected(  # noqa: C901
     if inclusion == "unsupported":
         if selected is True:
             LOGGER.debug(
-                "Property '%s' was selected but is not supported. " "Ignoring selected==True input.",
+                "Property '%s' was selected but is not supported. Ignoring selected==True input.",
                 ":".join(breadcrumb),
             )
         return False
@@ -360,8 +359,7 @@ def is_property_selected(  # noqa: C901
     if inclusion == "automatic":
         if selected is False:
             LOGGER.debug(
-                "Property '%s' was deselected while also set "
-                "for automatic inclusion. Ignoring selected==False input.",
+                "Property '%s' was deselected while also set for automatic inclusion. Ignoring selected==False input.",
                 ":".join(breadcrumb),
             )
         return True
@@ -373,7 +371,7 @@ def is_property_selected(  # noqa: C901
         return selected_by_default
 
     LOGGER.debug(
-        "Selection metadata omitted for '%s':'%s'. " "Using parent value of selected=%s.",
+        "Selection metadata omitted for '%s':'%s'. Using parent value of selected=%s.",
         stream_name,
         breadcrumb,
         parent_value,
@@ -505,7 +503,7 @@ def main_impl():
             is_sandbox=CONFIG.get("is_sandbox"),
             select_fields_by_default=CONFIG.get("select_fields_by_default"),
             default_start_date=CONFIG.get("start_date"),
-            default_end_date=CONFIG.get("end_date"),
+            default_end_date=CONFIG.get("end_date", singer_utils.strftime(singer_utils.now())),
             api_type=CONFIG.get("api_type"),
         )
         sf.login()
