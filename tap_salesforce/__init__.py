@@ -9,6 +9,7 @@ from copy import deepcopy
 
 import singer
 import singer.utils as singer_utils
+from singer import metadata, metrics
 
 import tap_salesforce.salesforce
 from tap_salesforce.salesforce import Salesforce
