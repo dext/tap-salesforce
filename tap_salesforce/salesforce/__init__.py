@@ -255,13 +255,22 @@ class Salesforce:
             else (singer_utils.now() - timedelta(weeks=4))
         ).isoformat()
 
-        self.default_end_date = default_end_date
+        self.default_end_date = (
+            singer_utils.strptime_to_utc(default_end_date) if default_end_date else (singer_utils.now())
+        ).isoformat()
 
         if default_start_date:
             LOGGER.info(
                 "Parsed start date '%s' from value '%s'",
                 self.default_start_date,
                 default_start_date,
+            )
+
+        if default_end_date:
+            LOGGER.info(
+                "Parsed end date '%s' from value '%s'",
+                self.default_end_date,
+                default_end_date,
             )
 
     # pylint: disable=anomalous-backslash-in-string,line-too-long
@@ -372,10 +381,7 @@ class Salesforce:
         return singer.get_bookmark(state, catalog_entry["tap_stream_id"], replication_key) or self.default_start_date
 
     def get_end_date(self):
-        if self.default_end_date is None:
-            return self.default_end_date
-
-        return singer_utils.strftime(singer_utils.strptime_to_utc(self.default_end_date))
+        return self.default_end_date
 
     def _build_query_string(
         self, catalog_entry, start_date, end_date=None, order_by_clause=True, is_full_refresh=False
